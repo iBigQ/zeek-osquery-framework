@@ -1,4 +1,4 @@
-module osquery::hosts;
+module osquery;
 
 export {
     ## Subscribe to an event. Whenever an osquery client connects to us, we'll subscribe to all matching activity
@@ -96,7 +96,7 @@ function insert_subscription(q: osquery::Query, host_list: vector of string, gro
     if (|host_list|<=1 && host_list[0]=="" && |group_list|<=1 && group_list[0]=="")
     {
         # To all if nothing specified
-        osquery::hosts::send_subscribe(osquery::HostBroadcastTopic, q);
+        osquery::send_subscribe(osquery::HostBroadcastTopic, q);
     }
     else
     {
@@ -105,7 +105,7 @@ function insert_subscription(q: osquery::Query, host_list: vector of string, gro
         {
             if (host_list[j] != "")
             {
-                osquery::hosts::send_subscribe(fmt("%s/%s", osquery::HostIndividualTopic,host_list[j]), q);
+                osquery::send_subscribe(fmt("%s/%s", osquery::HostIndividualTopic,host_list[j]), q);
             }
         }
         # To specific group
@@ -113,7 +113,7 @@ function insert_subscription(q: osquery::Query, host_list: vector of string, gro
         {
             if (group_list[j] != "")
             {
-                osquery::hosts::send_subscribe(fmt("%s/%s", osquery::HostGroupTopic,group_list[j]), q);
+                osquery::send_subscribe(fmt("%s/%s", osquery::HostGroupTopic,group_list[j]), q);
             }
         }
     }
@@ -135,7 +135,7 @@ function remove_subscription(q: osquery::Query, host_list: vector of string, gro
         if (|host_list|<=1 && host_list[0]=="" && |group_list|<=1 && group_list[0]=="")
         {
             # To all if nothing specified
-            osquery::hosts::send_unsubscribe(osquery::HostBroadcastTopic, q);
+            osquery::send_unsubscribe(osquery::HostBroadcastTopic, q);
         }
         else
         {
@@ -144,7 +144,7 @@ function remove_subscription(q: osquery::Query, host_list: vector of string, gro
             {
                 if (host_list[j] != "")
                 {
-                    osquery::hosts::send_unsubscribe(fmt("%s/%s", osquery::HostIndividualTopic,host_list[j]), q);
+                    osquery::send_unsubscribe(fmt("%s/%s", osquery::HostIndividualTopic,host_list[j]), q);
                 }
             }
             # To specific group
@@ -152,7 +152,7 @@ function remove_subscription(q: osquery::Query, host_list: vector of string, gro
             {
                 if (group_list[j] != "")
                 {
-                    osquery::hosts::send_unsubscribe(fmt("%s/%s", osquery::HostGroupTopic,group_list[j]), q);
+                    osquery::send_unsubscribe(fmt("%s/%s", osquery::HostGroupTopic,group_list[j]), q);
                 }
             }
         }
@@ -163,7 +163,7 @@ function insert_execution(q: osquery::Query, host_list: vector of string, group_
         if (|host_list|<=1 && host_list[0]=="" && |group_list|<=1 && group_list[0]=="")
         {
             # To all if nothing specified
-            osquery::hosts::send_execute(osquery::HostBroadcastTopic, q);
+            osquery::send_execute(osquery::HostBroadcastTopic, q);
         }
         else
         {
@@ -172,7 +172,7 @@ function insert_execution(q: osquery::Query, host_list: vector of string, group_
             {
                 if (host_list[j] != "")
                 {
-                    osquery::hosts::send_execute(fmt("%s/%s", osquery::HostIndividualTopic,host_list[j]), q);
+                    osquery::send_execute(fmt("%s/%s", osquery::HostIndividualTopic,host_list[j]), q);
                 }
             }
             # To specific group
@@ -180,7 +180,7 @@ function insert_execution(q: osquery::Query, host_list: vector of string, group_
             {
                 if (group_list[j] != "")
                 {
-                    osquery::hosts::send_execute(fmt("%s/%s", osquery::HostGroupTopic,group_list[j]), q);
+                    osquery::send_execute(fmt("%s/%s", osquery::HostGroupTopic,group_list[j]), q);
                 }
             }
         }
@@ -207,7 +207,7 @@ function insert_grouping(range_list: vector of subnet, group: string)
             {
                 local new_group = group;
                 osquery::log_osquery("info", host, fmt("Joining new group %s", new_group));
-                osquery::hosts::send_join( host_topic, new_group );
+                osquery::send_join( host_topic, new_group );
                 host_groups[host][|host_groups[host]|] = new_group;
                 add groups[new_group];
                 skip_host = T;

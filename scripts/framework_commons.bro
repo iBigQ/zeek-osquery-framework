@@ -12,10 +12,10 @@ export {
     const endpoint_name: string = "BroMaster" &redef;
 
     ## The remote IP Broker is connecting to
-    const remote_ip: string = "0.0.0.0" &redef;
+    const backend_ip: string = "0.0.0.0" &redef;
 
     ## The remote port Broker is connecting to
-    const remote_port: port = 9999/tcp &redef;
+    const backend_port: port = 9999/tcp &redef;
 
     # Topic prefix used for all topics in osquery communication
     const TopicPrefix: string = "/bro/osquery" &redef;

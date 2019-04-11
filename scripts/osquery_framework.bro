@@ -108,8 +108,8 @@ function subscribe(q: Query, host: string, group: string)
 
 function subscribe_multiple(q: Query, host_list: vector of string, group_list: vector of string)
 {
-    osquery::bros::share_subscription(q, host_list, group_list);
-    osquery::hosts::insert_subscription(q, host_list, group_list);
+    osquery::share_subscription(q, host_list, group_list);
+    osquery::insert_subscription(q, host_list, group_list);
 }
 
 function unsubscribe(q: Query, host: string, group: string)
@@ -121,8 +121,8 @@ function unsubscribe(q: Query, host: string, group: string)
 
 function unsubscribe_multiple(q: Query, host_list: vector of string, group_list: vector of string)
 {
-    osquery::bros::unshare_subscription(q, host_list, group_list);
-    osquery::hosts::remove_subscription(q, host_list, group_list);
+    osquery::unshare_subscription(q, host_list, group_list);
+    osquery::remove_subscription(q, host_list, group_list);
 }
 
 function execute(q: Query, host: string, group: string)
@@ -134,8 +134,8 @@ function execute(q: Query, host: string, group: string)
 
 function execute_multiple(q: Query, host_list: vector of string, group_list: vector of string)
 {
-    osquery::bros::share_execution(q, host_list, group_list);
-    osquery::hosts::insert_execution(q, host_list, group_list);
+    osquery::share_execution(q, host_list, group_list);
+    osquery::insert_execution(q, host_list, group_list);
 }
 
 function join(range: subnet, group: string)
@@ -146,8 +146,8 @@ function join(range: subnet, group: string)
 
 function join_multiple(range_list: vector of subnet, group: string)
 {
-    osquery::bros::share_grouping(range_list, group);
-    osquery::hosts::insert_grouping(range_list, group);
+    osquery::share_grouping(range_list, group);
+    osquery::insert_grouping(range_list, group);
 }
 
 function leave(range: subnet, group: string)
@@ -158,8 +158,8 @@ function leave(range: subnet, group: string)
 
 function leave_multiple(range_list: vector of subnet, group: string)
 {
-    osquery::bros::unshare_grouping(range_list, group);
-    osquery::hosts::remove_grouping(range_list, group);
+    osquery::unshare_grouping(range_list, group);
+    osquery::remove_grouping(range_list, group);
 }
 
 event Broker::peer_added(endpoint: Broker::EndpointInfo, msg: string)

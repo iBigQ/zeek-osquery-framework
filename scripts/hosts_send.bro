@@ -1,7 +1,7 @@
 @load base/frameworks/broker
 @load base/frameworks/logging
 
-module osquery::hosts;
+module osquery;
 
 export
 {

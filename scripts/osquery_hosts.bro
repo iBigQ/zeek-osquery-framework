@@ -1,7 +1,7 @@
 @load base/frameworks/broker
 @load base/frameworks/logging
 
-module osquery::hosts;
+module osquery;
 
 export {
     ## Checks the new ip address of the given host against the groupings and makes it to join respective groups.
@@ -45,7 +45,7 @@ function send_subscriptions_new_host(host_id: string)
         if (|sub_hosts|<=1 && sub_hosts[0]=="" && |sub_groups|<=1 && sub_groups[0]=="")
         {
             # To all if nothing specified
-            osquery::hosts::send_subscribe(host_topic, s$query);
+            osquery::send_subscribe(host_topic, s$query);
             skip_subscription = T;
         }
         if (skip_subscription)
@@ -57,7 +57,7 @@ function send_subscriptions_new_host(host_id: string)
             local sub_host = sub_hosts[j];
             if (host_id == sub_host)
             {
-                osquery::hosts::send_subscribe(host_topic, s$query);
+                osquery::send_subscribe(host_topic, s$query);
                 skip_subscription = T;
                 break;
             }
@@ -74,7 +74,7 @@ function send_subscriptions_new_host(host_id: string)
                 local sub_group = sub_groups[k];
                 if ( |host_group| <= |sub_group| && host_group == sub_group[:|host_group|])
                 {
-                    osquery::hosts::send_subscribe(host_topic, s$query);
+                    osquery::send_subscribe(host_topic, s$query);
                     skip_subscription = T;
                     break;
                 }
@@ -114,7 +114,7 @@ function send_subscriptions_new_group(host_id: string, group: string)
             {
                 if ( |group| <= |sub_group| && group == sub_group[:|group|])
                 {
-                    osquery::hosts::send_subscribe(host_topic, s$query);
+                    osquery::send_subscribe(host_topic, s$query);
                     break;
                 }
             }
@@ -149,7 +149,7 @@ function send_joins_new_address(host_id: string, ip: addr)
             {
                 local new_group: string = c$group;
                 osquery::log_osquery("info", host_id, fmt("joining new group %s", new_group));
-                osquery::hosts::send_join( host_topic, new_group );
+                osquery::send_join( host_topic, new_group );
                 host_groups[host_id][|host_groups[host_id]|] = new_group;
                 new_groups[|new_groups|] = new_group;
                 break;
@@ -164,7 +164,7 @@ function send_joins_new_address(host_id: string, ip: addr)
     }
 }
 
-hook host_addr_updated(utype: osquery::UpdateType, host_id: string, ip: addr)
+hook osquery::host_addr_updated(utype: osquery::UpdateType, host_id: string, ip: addr)
 {
     if (utype == osquery::ADD)
     {
@@ -175,7 +175,7 @@ hook host_addr_updated(utype: osquery::UpdateType, host_id: string, ip: addr)
     }
 }
 
-event osquery::hosts::host_new(peer_name: string, host_id: string, group_list: vector of string)
+event osquery::host_new(peer_name: string, host_id: string, group_list: vector of string)
 {
     osquery::log_osquery("info", host_id, fmt("Osquery host connected (peer id: %s)", peer_name));
 
