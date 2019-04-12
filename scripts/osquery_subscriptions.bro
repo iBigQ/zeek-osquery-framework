@@ -197,7 +197,7 @@ function insert_grouping(range_list: vector of subnet, group: string)
         local skip_host = F;
 
         local hostIPs: vector of addr;
-        hook getIPsOfHost(host, hostIPs);
+        hook osquery::getIPsOfHost(host, hostIPs);
         for (j in hostIPs)
         {
             if (skip_host) break;
