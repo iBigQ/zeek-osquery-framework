@@ -42,7 +42,6 @@ export {
     ## The osquery logging stream identifier.
     redef enum Log::ID += { LOG };
 
-
     ## A record type containing the column fields of the osquery log.
     type Info: record {
         ## The network time at which a osquery activity occurred.
@@ -198,3 +197,7 @@ function same_event(q1: Query, q2: Query) : bool
     return T;
 }
 
+event bro_init()
+{
+    Log::create_stream(LOG, [$columns=Info, $path="osquery"]);
+}

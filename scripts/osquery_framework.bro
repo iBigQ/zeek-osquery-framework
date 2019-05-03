@@ -196,15 +196,10 @@ event Broker::status(endpoint: Broker::EndpointInfo, msg: string)
 
 event bro_init()
 {
-    Log::create_stream(LOG, [$columns=Info, $path="osquery"]);
-
     local topic = BroID_Topic;
     log_local("info", fmt("Subscribing to individual topic %s", topic));
     Broker::subscribe(topic);
-    
-    # TODO: Not sure this should stay here. We still need to figure out a way
-    # for different applications to use Broker jointly without messing up
-    # whatever another one is doing.
 
+    log_local("info", fmt("Accepting incoming broker connections on IP %s and port %s", broker_ip, broker_port));
     Broker::listen(broker_ip, broker_port);
 }

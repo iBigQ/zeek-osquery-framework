@@ -5,9 +5,6 @@ module osquery;
 
 export
 {
-    ## The osquery logging stream identifier.
-    redef enum Log::ID += { LOG_BACKEND };
-
     ## Share subscription to an event with other bro nodes.
     ##
     ## q: The query to subscribe to.
@@ -132,7 +129,7 @@ function delete_bro_grouping(group: string)
 function send_subscription(topic: string, ev: any, group_flood: bool, q: osquery::Query, host_list: vector of string &default=vector(""), group_list: vector of string &default=vector(""))
 {
   local ev_name = split_string(fmt("%s", ev), /\n/)[0];
-  osquery::log_osquery("debug", topic, fmt("%s event %s() for query '%s'", "Forwarding", ev_name, q$query), LOG_BACKEND);
+  osquery::log_bro("debug", topic, fmt("%s event %s() for query '%s'", "Forwarding", ev_name, q$query));
   
   local ev_args = Broker::make_event(ev, group_flood, fmt("%s",Broker::node_id()), q, host_list, group_list);
   Broker::publish(topic, ev_args);
@@ -141,7 +138,7 @@ function send_subscription(topic: string, ev: any, group_flood: bool, q: osquery
 function send_grouping(topic: string, ev: any, group_flood: bool, range_list: vector of subnet, group: string)
 {
   local ev_name = split_string(fmt("%s", ev), /\n/)[0];
-  osquery::log_osquery("debug", topic, fmt("%s event %s() for group '%s'", "Forwarding", ev_name, group), LOG_BACKEND);
+  osquery::log_bro("debug", topic, fmt("%s event %s() for group '%s'", "Forwarding", ev_name, group));
   
   local ev_args = Broker::make_event(ev, group_flood, fmt("%s",Broker::node_id()), range_list, group);
   Broker::publish(topic, ev_args);
@@ -309,7 +306,7 @@ event osquery::bro_leave(group_flood: bool, via_peer_id: string, range_list: vec
 
 event osquery::bro_new(peer_name: string, bro_id: string, init: bool)
 {
-  osquery::log_osquery("info", bro_id, fmt("Osquery host connected (announced as %s)", peer_name));
+  osquery::log_bro("info", bro_id, fmt("Bro Backend connected (%s announced as %s)", peer_name, bro_id));
   local topic = fmt("%s/%s", osquery::BroIndividualTopic, peer_name);
   local p_name: string;
 
@@ -434,7 +431,7 @@ event Broker::peer_removed(endpoint: Broker::EndpointInfo, msg: string)
   if (peer_name !in bro_subscriptions) return;
 
   local bro_id: string = peer_to_bro[peer_name];
-  osquery::log_osquery("info", bro_id, "Bro disconnected");
+  osquery::log_bro("info", bro_id, "Bro disconnected");
 
   # Revoke all subscriptions that came in via this peer
   revoke_subscriptions(peer_name);
@@ -453,7 +450,7 @@ event Broker::peer_lost(endpoint: Broker::EndpointInfo, msg: string)
   if (peer_name !in bro_subscriptions) return;
 
   local bro_id: string = peer_to_bro[peer_name];
-  osquery::log_osquery("info", bro_id, "Bro disconnected");
+  osquery::log_bro("info", bro_id, "Bro disconnected");
 
   # Revoke all subscriptions that came in via this peer
   revoke_subscriptions(peer_name);
@@ -468,8 +465,6 @@ event Broker::peer_lost(endpoint: Broker::EndpointInfo, msg: string)
 
 event bro_init()
 {
-  Log::create_stream(LOG_BACKEND, [$columns=osquery::Info, $path="osquery_bros"]);
-  
   # Listen on Bro announce topic
   local topic: string = osquery::BroAnnounceTopic;
   osquery::log_local("info", fmt("Subscribing to bro announce topic %s", topic));
