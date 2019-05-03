@@ -1,5 +1,5 @@
 [package]
 description = Osquery framework with basic API to control osquery hosts.
 tags = osquery
-version = 0.3.1
+version = 0.3.2
 script_dir = scripts
