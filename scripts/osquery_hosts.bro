@@ -23,6 +23,8 @@ export {
     global remove_host_addr: hook(host_id: string, ip: addr);
 }
 
+global connect_balance: table[string] of count;
+
 ## Sends current subscriptions to the new osquery host (given by client_id).
 ##
 ## This checks if any subscription matches the host restriction (or broadcast)
@@ -175,7 +177,6 @@ hook osquery::add_host_addr(host_id: string, ip: addr) {
     #TODO
 }
 
-
 @if ( !Cluster::is_enabled() || Cluster::local_node_type() == Cluster::MANAGER )
 event osquery::host_new(peer_name: string, host_id: string, group_list: vector of string)
 {
@@ -199,17 +200,11 @@ event osquery::host_new(peer_name: string, host_id: string, group_list: vector o
     event osquery::host_connected(host_id);
 }
 
-event Broker::peer_lost(endpoint: Broker::EndpointInfo, msg: string)
-{
-    local peer_name: string = endpoint$id;
+function _reset_peer(peer_name: string) {
     if (peer_name !in peer_to_host) return;
 
     local host_id: string = peer_to_host[peer_name];
-    delete peer_to_host[peer_name];
     osquery::log_osquery("info", host_id, "Osquery host disconnected");
-
-    # Internal client tracking
-    delete hosts[host_id];
 
     # Check if anyone else is left in the groups
     local others_groups: set[string];
@@ -231,10 +226,53 @@ event Broker::peer_lost(endpoint: Broker::EndpointInfo, msg: string)
             delete groups[host_g];
         }
     }
-    delete host_groups[host_id];
+}
 
-    # raise event for the disconnected host
-    event osquery::host_disconnected(host_id);
+function _remove_peer(peer_name: string) {
+    if (peer_name !in peer_to_host) return;
+    
+    local host_id: string = peer_to_host[peer_name];
+    delete peer_to_host[peer_name];
+
+    # Internal client tracking
+    delete hosts[host_id];
+    delete host_groups[host_id];
+}
+
+event Broker::peer_added(endpoint: Broker::EndpointInfo, msg: string) {
+    local peer_name: string = endpoint$id;
+    
+    # Connect balance
+    if (peer_name !in connect_balance) { connect_balance[peer_name] = 0; }
+
+    if (connect_balance[peer_name] > 0) {
+        _reset_peer(peer_name);
+    }
+    connect_balance[peer_name] += 1;
+}
+
+
+event Broker::peer_lost(endpoint: Broker::EndpointInfo, msg: string)
+{
+    local peer_name: string = endpoint$id;
+
+    if (peer_name in peer_to_host) {
+        local host_id: string = peer_to_host[peer_name];
+        osquery::log_osquery("info", host_id, "Osquery host disconnected");
+
+        # raise event for the disconnected host
+        event osquery::host_disconnected(host_id);
+    }
+
+    # Connect balance
+    if (connect_balance[peer_name] == 1) {
+	_reset_peer(peer_name);
+    	_remove_peer(peer_name);
+    }
+    connect_balance[peer_name] -= 1;
+    if (connect_balance[peer_name] == 0) { 
+        delete connect_balance[peer_name];
+    }
 }
 
 event bro_init()
