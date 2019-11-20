@@ -204,7 +204,6 @@ function _reset_peer(peer_name: string) {
     if (peer_name !in peer_to_host) return;
 
     local host_id: string = peer_to_host[peer_name];
-    osquery::log_osquery("info", host_id, "Osquery host disconnected");
 
     # Check if anyone else is left in the groups
     local others_groups: set[string];
@@ -247,6 +246,9 @@ event Broker::peer_added(endpoint: Broker::EndpointInfo, msg: string) {
 
     if (connect_balance[peer_name] > 0) {
         _reset_peer(peer_name);
+        if (peer_name in peer_to_host) {
+            osquery::log_osquery("info", peer_to_host[peer_name], "Osquery host re-established connection");
+        }
     }
     connect_balance[peer_name] += 1;
 }
@@ -258,7 +260,11 @@ event Broker::peer_lost(endpoint: Broker::EndpointInfo, msg: string)
 
     if (peer_name in peer_to_host) {
         local host_id: string = peer_to_host[peer_name];
-        osquery::log_osquery("info", host_id, "Osquery host disconnected");
+        if (connect_balance[peer_name] == 1) {
+            osquery::log_osquery("info", host_id, "Osquery host disconnected");
+        } else {
+            osquery::log_osquery("info", host_id, "Osquery host tore down legacy connection");
+        }
 
         # raise event for the disconnected host
         event osquery::host_disconnected(host_id);
