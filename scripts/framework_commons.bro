@@ -1,5 +1,17 @@
 module osquery;
 
+# Assume locally generated/captured traffic
+redef ignore_checksums = T;
+
+# Increase network session timeouts for better attribution
+redef tcp_SYN_timeout = 10sec;
+redef tcp_attempt_delay = 10sec;
+redef tcp_close_delay = 10sec;
+redef tcp_connection_linger = 10sec;
+redef tcp_inactivity_timeout = 10sec;
+redef tcp_reset_delay = 10sec;
+redef tcp_session_timer = 10sec;
+
 export {
 
     ## The local IP Broker is listening on
