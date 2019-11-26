@@ -180,6 +180,11 @@ hook osquery::add_host_addr(host_id: string, ip: addr) {
 @if ( !Cluster::is_enabled() || Cluster::local_node_type() == Cluster::MANAGER )
 event osquery::host_new(peer_name: string, host_id: string, group_list: vector of string)
 {
+    for (peer_name_old in peer_to_host) {
+        if (peer_to_host[peer_name_old] != peer_name) { next; }
+        osquery::log_osquery("info", host_id, fmt("Osquery host disconnected with new announcement (%s)", peer_name_old));
+        event osquery::host_disconnected(host_id);
+    }
     osquery::log_osquery("info", host_id, fmt("Osquery host connected (%s announced as: %s)", peer_name, host_id));
 
     # Internal client tracking
@@ -247,7 +252,7 @@ event Broker::peer_added(endpoint: Broker::EndpointInfo, msg: string) {
     if (connect_balance[peer_name] > 0) {
         _reset_peer(peer_name);
         if (peer_name in peer_to_host) {
-            osquery::log_osquery("info", peer_to_host[peer_name], "Osquery host re-established connection");
+            osquery::log_osquery("info", peer_to_host[peer_name], fmt("Osquery host re-established connection (%s)", peer_name));
         }
     }
     connect_balance[peer_name] += 1;
@@ -261,9 +266,9 @@ event Broker::peer_lost(endpoint: Broker::EndpointInfo, msg: string)
     if (peer_name in peer_to_host) {
         local host_id: string = peer_to_host[peer_name];
         if (connect_balance[peer_name] == 1) {
-            osquery::log_osquery("info", host_id, "Osquery host disconnected");
+            osquery::log_osquery("info", host_id, fmt("Osquery host disconnected (%s)", peer_name));
         } else {
-            osquery::log_osquery("info", host_id, "Osquery host tore down legacy connection");
+            osquery::log_osquery("info", host_id, fmt("Osquery host tore down legacy connection (%s)", peer_name));
         }
 
         # raise event for the disconnected host
