@@ -178,33 +178,6 @@ hook osquery::add_host_addr(host_id: string, ip: addr) {
 }
 
 @if ( !Cluster::is_enabled() || Cluster::local_node_type() == Cluster::MANAGER )
-event osquery::host_new(peer_name: string, host_id: string, group_list: vector of string)
-{
-    for (peer_name_old in peer_to_host) {
-        if (peer_to_host[peer_name_old] != host_id) { next; }
-        osquery::log_osquery("info", host_id, fmt("Osquery host disconnected with new announcement (%s)", peer_name_old));
-        event osquery::host_disconnected(host_id);
-    }
-    osquery::log_osquery("info", host_id, fmt("Osquery host connected (%s announced as: %s)", peer_name, host_id));
-
-    # Internal client tracking
-    peer_to_host[peer_name] = host_id;
-    add hosts[host_id];
-    for (i in group_list)
-    {
-        add groups[group_list[i]];
-    }
-    host_groups[host_id] = group_list;
-    #TODO: that is only the topic prefix
-    host_groups[host_id][|host_groups[host_id]|] = osquery::HostIndividualTopic;
-
-    # Make host to join group and to schedule queries
-    send_subscriptions_new_host(host_id);
-
-    # raise event for new host
-    event osquery::host_connected(host_id);
-}
-
 function _reset_peer(peer_name: string) {
     if (peer_name !in peer_to_host) return;
 
@@ -241,6 +214,35 @@ function _remove_peer(peer_name: string) {
     # Internal client tracking
     delete hosts[host_id];
     delete host_groups[host_id];
+}
+
+event osquery::host_new(peer_name: string, host_id: string, group_list: vector of string)
+{
+    for (peer_name_old in peer_to_host) {
+        if (peer_to_host[peer_name_old] != host_id) { next; }
+        osquery::log_osquery("info", host_id, fmt("Osquery host disconnected with new announcement (%s)", peer_name_old));
+        event osquery::host_disconnected(host_id);
+        _reset_peer(peer_name_old);
+        _remove_peer(peer_name_old);
+    }
+    osquery::log_osquery("info", host_id, fmt("Osquery host connected (%s announced as: %s)", peer_name, host_id));
+
+    # Internal client tracking
+    peer_to_host[peer_name] = host_id;
+    add hosts[host_id];
+    for (i in group_list)
+    {
+        add groups[group_list[i]];
+    }
+    host_groups[host_id] = group_list;
+    #TODO: that is only the topic prefix
+    host_groups[host_id][|host_groups[host_id]|] = osquery::HostIndividualTopic;
+
+    # Make host to join group and to schedule queries
+    send_subscriptions_new_host(host_id);
+
+    # raise event for new host
+    event osquery::host_connected(host_id);
 }
 
 event Broker::peer_added(endpoint: Broker::EndpointInfo, msg: string) {
