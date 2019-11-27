@@ -181,7 +181,7 @@ hook osquery::add_host_addr(host_id: string, ip: addr) {
 event osquery::host_new(peer_name: string, host_id: string, group_list: vector of string)
 {
     for (peer_name_old in peer_to_host) {
-        if (peer_to_host[peer_name_old] != peer_name) { next; }
+        if (peer_to_host[peer_name_old] != host_id) { next; }
         osquery::log_osquery("info", host_id, fmt("Osquery host disconnected with new announcement (%s)", peer_name_old));
         event osquery::host_disconnected(host_id);
     }
